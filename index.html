@@ -4,26 +4,113 @@
   <meta charset="UTF-8">
   <title>سنگ کاغذ قیچی حرفه‌ای</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background: linear-gradient(to right, #1f1c2c, #928dab);
+      font-family: 'Vazir', sans-serif;
+      color: #fff;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 30px;
+    }
+
+    .choices {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      flex-wrap: wrap;
+    }
+
+    .choice {
+      background-color: #ffffff10;
+      border: 2px solid #fff;
+      border-radius: 15px;
+      padding: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+      width: 120px;
+    }
+
+    .choice:hover {
+      background-color: #ffffff30;
+      transform: scale(1.05);
+      box-shadow: 0 0 10px #fff;
+    }
+
+    .choice img {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 10px;
+    }
+
+    .choice span {
+      display: block;
+      font-size: 1.1em;
+      color: #fff;
+    }
+
+    .result-box {
+      margin-top: 40px;
+      font-size: 1.5em;
+      background: rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 10px;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
     <h1>بازی سنگ کاغذ قیچی</h1>
     <div class="choices">
-  <button class="choice" onclick="play('سنگ')">
-    <img src="assets/rock.png" alt="سنگ">
-    <span>سنگ</span>
-  </button>
-  <button class="choice" onclick="play('کاغذ')">
-    <img src="assets/paper.png" alt="کاغذ">
-    <span>کاغذ</span>
-  </button>
-  <button class="choice" onclick="play('قیچی')">
-    <img src="assets/scissors.png" alt="قیچی">
-    <span>قیچی</span>
-  </button>
-</div>
+      <button class="choice" onclick="play('سنگ')">
+        <img src="assets/Rock.png" alt="سنگ">
+        <span>سنگ</span>
+      </button>
+      <button class="choice" onclick="play('کاغذ')">
+        <img src="assets/paper.png" alt="کاغذ">
+        <span>کاغذ</span>
+      </button>
+      <button class="choice" onclick="play('قیچی')">
+        <img src="assets/scissors.png" alt="قیچی">
+        <span>قیچی</span>
+      </button>
+    </div>
     <div id="result" class="result-box"></div>
   </div>
-  <script src="script.js"></script>
+
+  <script>
+    function play(userChoice) {
+      const choices = ['سنگ', 'کاغذ', 'قیچی'];
+      const computerChoice = choices[Math.floor(Math.random() * 3)];
+      let result = '';
+
+      if (userChoice === computerChoice) {
+        result = 'مساوی شد!';
+      } else if (
+        (userChoice === 'سنگ' && computerChoice === 'قیچی') ||
+        (userChoice === 'کاغذ' && computerChoice === 'سنگ') ||
+        (userChoice === 'قیچی' && computerChoice === 'کاغذ')
+      ) {
+        result = 'شما بردید!';
+      } else {
+        result = 'کامپیوتر برد!';
+      }
+
+      document.getElementById('result').innerHTML =
+        `<strong>شما:</strong> ${userChoice} <br>
+         <strong>کامپیوتر:</strong> ${computerChoice} <br>
+         <strong>نتیجه:</strong> ${result}`;
+    }
+  </script>
 </body>
 </html>
