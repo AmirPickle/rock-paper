@@ -87,7 +87,24 @@
     </div>
     <div id="result" class="result-box"></div>
   </div>
+<!-- Firebase SDK برای مرورگر -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyB-aAXrF3-4RoYXWa5rDyXa-jcn-y0qKyE",
+    authDomain: "rock-paper-online.firebaseapp.com",
+    databaseURL: "https://rock-paper-online-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "rock-paper-online",
+    storageBucket: "rock-paper-online.firebasestorage.app",
+    messagingSenderId: "904699853015",
+    appId: "1:904699853015:web:d7be729c54fb376e719892"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+</script>
   <script>
     function play(userChoice) {
       const choices = ['سنگ', 'کاغذ', 'قیچی'];
