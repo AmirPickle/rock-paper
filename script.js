@@ -1,35 +1,108 @@
 let playerName = "";
+let roomId = "";
+let round = 1;
 
 function enterGame() {
   const nameInput = document.getElementById("player-name");
-  if (!nameInput.value) return alert("نام را وارد کنید");
+  const roomInput = document.getElementById("room-id");
+  if (!nameInput.value || !roomInput.value) return alert("نام و شناسه اتاق را وارد کنید");
+
   playerName = nameInput.value;
-  db.ref("players/" + playerName).set({ choice: null, score: 0 });
-  document.getElementById("login-screen").style.display = "none";
-  document.getElementById("game-screen").style.display = "block";
+  roomId = roomInput.value;
+
+  document.getElementById("player-label").innerText = `بازیکن: ${playerName}`;
+  document.getElementById("room-label").innerText = `اتاق: ${roomId}`;
+
+  db.ref(`rooms/${roomId}/players/${playerName}`).set({ choice: null, score: 0 });
+  db.ref(`rooms/${roomId}/meta/round`).set(round);
+
+  document.getElementById("login-screen").classList.add("hidden");
+  document.getElementById("game-screen").classList.remove("hidden");
+
+  listenToRoom();
 }
 
 function play(choice) {
-  db.ref("players/" + playerName).update({ choice: choice });
+  db.ref(`rooms/${roomId}/players/${playerName}`).update({ choice: choice });
+}
 
-  db.ref("players").once("value", snapshot => {
+function resetGame() {
+  db.ref(`rooms/${roomId}/players`).once("value", snapshot => {
     const players = snapshot.val();
-    const names = Object.keys(players);
-    if (names.length < 2) {
-      document.getElementById("result").innerText = "منتظر بازیکن دوم...";
-      return;
+    for (let name in players) {
+      db.ref(`rooms/${roomId}/players/${name}/choice`).set(null);
     }
+    round++;
+    db.ref(`rooms/${roomId}/meta/round`).set(round);
+    document.getElementById("round-num").innerText = round;
+    document.getElementById("result").innerText = "";
+  });
+}
 
-    const [p1, p2] = names;
-    const c1 = players[p1].choice;
-    const c2 = players[p2].choice;
+function leaveGame() {
+  db.ref(`rooms/${roomId}/players/${playerName}`).remove();
+  document.getElementById("game-screen").classList.add("hidden");
+  document.getElementById("login-screen").classList.remove("hidden");
+}
 
-    if (!c1 || !c2) {
-      document.getElementById("result").innerText = "منتظر انتخاب هر دو بازیکن...";
-      return;
-    }
+function listenToRoom() {
+  db.ref(`rooms/${roomId}/players`).on("value", snapshot => {
+    const players = snapshot.val();
+    updateScores(players);
+    checkResult(players);
+  });
 
+  db.ref(`rooms/${roomId}/meta/round`).on("value", snapshot => {
+    round = snapshot.val() || 1;
+    document.getElementById("round-num").innerText = round;
+  });
+
+  db.ref(`rooms/${roomId}/history`).on("value", snapshot => {
+    const history = snapshot.val();
+    updateHistory(history);
+  });
+}
+
+function updateScores(players) {
+  let scoreText = "امتیازها:\n";
+  for (let name in players) {
+    scoreText += `${name}: ${players[name].score || 0}\n`;
+  }
+  document.getElementById("score").innerText = scoreText;
+}
+
+function updateHistory(history) {
+  if (!history) return;
+  let text = "تاریخچه:\n";
+  for (let r in history) {
+    const h = history[r];
+    text += `دور ${r}: ${h.p1} (${h.c1}) vs ${h.p2} (${h.c2}) → ${h.result}\n`;
+  }
+  document.getElementById("history").innerText = text;
+}
+
+function checkResult(players) {
+  const names = Object.keys(players);
+  if (names.length < 2) {
+    document.getElementById("result").innerText = "منتظر بازیکن دوم...";
+    return;
+  }
+
+  const [p1, p2] = names;
+  const c1 = players[p1].choice;
+  const c2 = players[p2].choice;
+
+  if (!c1 || !c2) {
+    document.getElementById("result").innerText = "منتظر انتخاب هر دو بازیکن...";
+    return;
+  }
+
+  db.ref(`rooms/${roomId}/history/${round}`).once("value", snap => {
+    if (snap.exists()) return;
+
+    let result = "";
     let winner = null;
+
     if (c1 === c2) {
       result = "مساوی شد!";
     } else if (
@@ -46,34 +119,19 @@ function play(choice) {
 
     document.getElementById("result").innerText = `${p1}: ${c1} | ${p2}: ${c2} → ${result}`;
 
+    db.ref(`rooms/${roomId}/history/${round}`).set({
+      p1: p1,
+      c1: c1,
+      p2: p2,
+      c2: c2,
+      result: result
+    });
+
     if (winner) {
-      db.ref("players/" + winner).once("value", snap => {
+      db.ref(`rooms/${roomId}/players/${winner}`).once("value", snap => {
         const score = snap.val().score || 0;
-        db.ref("players/" + winner).update({ score: score + 1 });
+        db.ref(`rooms/${roomId}/players/${winner}/score`).set(score + 1);
       });
     }
-
-    updateScores();
-  });
-}
-
-function updateScores() {
-  db.ref("players").once("value", snapshot => {
-    const players = snapshot.val();
-    let scoreText = "امتیازها:\n";
-    for (let name in players) {
-      scoreText += `${name}: ${players[name].score || 0}\n`;
-    }
-    document.getElementById("score").innerText = scoreText;
-  });
-}
-
-function resetGame() {
-  db.ref("players").once("value", snapshot => {
-    const players = snapshot.val();
-    for (let name in players) {
-      db.ref("players/" + name).update({ choice: null });
-    }
-    document.getElementById("result").innerText = "";
   });
 }
