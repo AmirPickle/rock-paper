@@ -1,22 +1,32 @@
 function play(userChoice) {
-  const choices = ['سنگ', 'کاغذ', 'قیچی'];
-  const computerChoice = choices[Math.floor(Math.random() * 3)];
-  let result = '';
+  const playerId = prompt("نام بازیکن را وارد کنید:");
+  db.ref("game/" + playerId).set({
+    choice: userChoice,
+    time: Date.now()
+  });
 
-  if (userChoice === computerChoice) {
-    result = 'مساوی شد!';
-  } else if (
-    (userChoice === 'سنگ' && computerChoice === 'قیچی') ||
-    (userChoice === 'کاغذ' && computerChoice === 'سنگ') ||
-    (userChoice === 'قیچی' && computerChoice === 'کاغذ')
-  ) {
-    result = 'شما بردید!';
-  } else {
-    result = 'کامپیوتر برد!';
-  }
+  db.ref("game").once("value", snapshot => {
+    const data = snapshot.val();
+    const players = Object.keys(data);
+    if (players.length === 2) {
+      const [p1, p2] = players;
+      const c1 = data[p1].choice;
+      const c2 = data[p2].choice;
+      let result = '';
 
-  document.getElementById('result').innerHTML =
-    `<strong>شما:</strong> ${userChoice} <br>
-     <strong>کامپیوتر:</strong> ${computerChoice} <br>
-     <strong>نتیجه:</strong> ${result}`;
+      if (c1 === c2) result = 'مساوی شد!';
+      else if (
+        (c1 === 'سنگ' && c2 === 'قیچی') ||
+        (c1 === 'کاغذ' && c2 === 'سنگ') ||
+        (c1 === 'قیچی' && c2 === 'کاغذ')
+      ) result = `${p1} برد!`;
+      else result = `${p2} برد!`;
+
+      document.getElementById('result').innerText =
+        `${p1}: ${c1} | ${p2}: ${c2} → ${result}`;
+    } else {
+      document.getElementById('result').innerText =
+        `منتظر بازیکن دوم...`;
+    }
+  });
 }
